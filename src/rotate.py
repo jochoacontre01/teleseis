@@ -198,7 +198,7 @@ def nez_to_psvh(
         r = -r_obs
         t = -t_obs
 
-        shcomp[ii] = t  # SH is identical to Transverse
+        shcomp[ii] = 0.5 * t  # SH is identical to Transverse
 
         # 2. Free surface transfer matrix for P and SV
         p = rayp_arr[ii]
@@ -213,8 +213,8 @@ def nez_to_psvh(
         # Assuming Z is positive UP, R is positive AWAY (baz+180)
         term = 1.0 - 2.0 * beta**2 * p**2
 
-        pcomp[ii] = (term / (2.0 * alpha * qa)) * zcomp_arr[ii] - (p * beta**2 / alpha) * r
-        svcomp[ii] = (p * beta) * zcomp_arr[ii] + (term / (2.0 * beta * qb)) * r
+        pcomp[ii] = (term / (2.0 * alpha * qa)) * zcomp_arr[ii] + (p * beta**2 / alpha) * r
+        svcomp[ii] = - (p * beta) * zcomp_arr[ii] + (term / (2.0 * beta * qb)) * r
 
     if pcomp.shape[0] == 1:
         return pcomp[0], svcomp[0], shcomp[0]
