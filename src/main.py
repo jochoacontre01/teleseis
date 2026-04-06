@@ -2,17 +2,13 @@ import numpy as np
 import scipy.io
 from pathlib import Path
 
-# Import the previously translated functions
-# (Assuming they are saved as rotations.py and spectral.py in the same directory)
 from rotate import nez_to_rtz, nez_to_lqt, nez_to_psvh
 from spectral import decon
 from plotting import compare_traces, plot_traces, map_1rf
 
 
 def main():
-    # ==========================================
-    # 1. Load Data
-    # ==========================================
+    # Load Data
     print("Loading data...")
     try:
         data = scipy.io.loadmat(Path(__file__).resolve().parents[2] / "lab6_material/Input_data.mat")
@@ -28,9 +24,7 @@ def main():
     print("Plotting raw traces...")
     plot_traces(ns_trace1, ew_trace1, z_trace1, labels=["NS", "EW", "Z"])
 
-    # ==========================================
-    # 2. Rotate into all 3 coordinate systems
-    # ==========================================
+    # Rotate into all 3 coordinate systems
     baz = 78.75
     rayp = 0.07125
     vp = 3.0
@@ -51,9 +45,7 @@ def main():
     # Compare versions
     compare_traces(rcomp, qcomp, svcomp, labels=["Radial", "Q", "SV"])
 
-    # ==========================================
-    # 3. Change velocities and compare
-    # ==========================================
+    # Change velocities and compare
     vp_new = 2.5
     vs_new = 1.0
     print(f"\nRe-evaluating with changed velocities (vp={vp_new}, vs={vs_new})...")
@@ -82,9 +74,7 @@ def main():
         shcomp, shcomp_changev, labels=[f"SH (Vs={vs})", f"SH (Vs={vs_new})"]
     )
 
-    # ==========================================
-    # 4. Part 2: Deconvolution
-    # ==========================================
+    # Part 2: Deconvolution
     print("\nRunning Deconvolution Testing...")
     # in the vicinity of 100 works well for the water level ...
     # really have to look at the power spectrum to see that the larger values are too large.
@@ -107,9 +97,7 @@ def main():
     # Plot all the deconvolved traces together to observe the effect of the water level
     plot_traces(*decon_results, labels=decon_labels)
 
-    # ==========================================
-    # 5. Part 3: Depth Mapping
-    # ==========================================
+    # Part 3: Depth Mapping
     print("\nMapping SV-P receiver function to depth...")
     # Using water level 100.0 as noted in the comments that it "works well"
     svp_rf = decon(svcomp, pcomp, 100.0)
