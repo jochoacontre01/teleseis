@@ -34,9 +34,6 @@ Visualization utilities for seismic data:
 - `map_1rf()`: Maps receiver functions to depth
 - `powspec()`: Calculates and plots power spectral density
 
-### `main.py`
-Example script demonstrating the package functionality with sample teleseismic data.
-
 ## Installation
 
 ### Prerequisites
