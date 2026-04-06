@@ -45,7 +45,7 @@ Example script demonstrating the package functionality with sample teleseismic d
 
 ### Install from source
 ```bash
-git clone <repository-url>
+git clone https://github.com/jochoacontre01/teleseis.git
 cd teleseis
 pip install -e .
 ```
