@@ -5,12 +5,25 @@ import matplotlib.pyplot as plt
 
 def powspec(seis, dt):
     """
-    POWSPEC calculates and plots the power spectral density of seismogram(s) in SEIS. 
-    
-    DT is the sample interval and SPEC is the power spectrum. If SEIS is a single 
-    seismogram, then a log-log plot of the power spectrum is displayed. If SEIS 
-    is a matrix, then the spectrum is calculated for each line of SEIS, but no 
-    plot is produced.
+    Calculate and plot the power spectral density of seismogram(s).
+
+    If `seis` is a single seismogram, a log-log plot of the power spectrum 
+    is displayed. If `seis` is a matrix, the spectrum is calculated for each 
+    row of `seis`, but no plot is produced.
+
+    Parameters
+    ----------
+    seis : array_like
+        Input seismogram(s). Can be a 1D array for a single seismogram or a 
+        2D array for multiple seismograms where traces are rows.
+    dt : float
+        The sample interval.
+
+    Returns
+    -------
+    spec : ndarray
+        The computed power spectrum. Returns a 1D array if the input is 1D, 
+        or a 2D/transposed array depending on the input dimensions.
     """
     seis_arr = np.asarray(seis)
     is_1d = seis_arr.ndim == 1 or min(seis_arr.shape) == 1
@@ -66,17 +79,32 @@ def powspec(seis, dt):
 def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None, 
                   title_str="Seismogram Section", xlabel_str="Trace Number"):
     """
-    Plots a seismogram section as a function of depth.
-    
-    Parameters:
-        seis (2D array): Array of seismograms (traces forming rows).
-        aflag (float): Determines amplitude scaling. 
-                       < 0: Trace scaled to its maximum.
-                       == 0: Trace scaled to max of entire section.
-                       > 0: Trace scaled to aflag value.
-        delta (list/array): Position of geophones. Can be None/empty.
-        lf, hf (float): Low and high cutoff frequencies for bandpass. Can be None.
-        title_str, xlabel_str (str): Plot labels (replacing MATLAB's inputname).
+    Plot a seismogram section as a function of depth.
+
+    Parameters
+    ----------
+    seis : array_like
+        2D array of seismograms where traces form the rows.
+    aflag : float
+        Determines amplitude scaling. 
+        - If < 0: Trace is scaled to its maximum.
+        - If == 0: Trace is scaled to the maximum of the entire section.
+        - If > 0: Trace is scaled to the `aflag` value.
+    delta : array_like, optional
+        Position of geophones. Default is None, which automatically 
+        generates an array from 1 to the number of traces.
+    lf : float, optional
+        Low cutoff frequency for bandpass filtering. Default is None.
+    hf : float, optional
+        High cutoff frequency for bandpass filtering. Default is None.
+    title_str : str, optional
+        The title of the plot. Default is "Seismogram Section".
+    xlabel_str : str, optional
+        The label for the x-axis. Default is "Trace Number".
+
+    Returns
+    -------
+    None
     """
     # Convert input to float numpy array to prevent integer division issues
     seis = np.array(seis, dtype=float)
@@ -199,14 +227,24 @@ def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None,
 
 def plot_traces(*traces, labels=None):
     """
-    PLOT_TRACES(TRACE1, TRACE2, TRACE3, ...)
-    Plot time series TRACE1, TRACE2, TRACE3, ... where TRACE[N] is a row
-    or column of numbers. By default, traces are plotted with vertical
-    axis between -1 and 1. To optimize vertical axis for individual
-    traces, uncomment command line "axis tight" in the code.
-    
-    Python adaptation: Pass `labels=['trace1', 'trace2']` as a kwarg since 
-    Python cannot implicitly extract input variable names like MATLAB.
+    Plot multiple time series in separate subplots.
+
+    By default, traces are plotted with a vertical axis between -1 and 1. 
+    To optimize the vertical axis for individual traces, uncomment the 
+    `autoscale` line in the code.
+
+    Parameters
+    ----------
+    *traces : array_like
+        Variable number of time series arrays to plot. Each trace should 
+        be a 1D array or coercible to one.
+    labels : list of str, optional
+        List of labels corresponding to each trace. If None or if fewer 
+        labels are provided than traces, default labels ('Trace N') are used.
+
+    Returns
+    -------
+    None
     """
     shift = 10.0
     dt = 0.05
@@ -239,9 +277,21 @@ def plot_traces(*traces, labels=None):
 
 def map_1rf(rfun, rayp):
     """
-    MAP_1RF(RFUN, RAYP)
-    Maps a single receiver function RFUN with ray parameter RAYP (s/km) 
-    to depth by 1D migration
+    Map a single receiver function to depth by 1D migration.
+
+    Calculates and plots the depth mapping for Ps, Pps, and Pss waves
+    based on a simplified velocity model.
+
+    Parameters
+    ----------
+    rfun : array_like
+        A 1D array representing the receiver function.
+    rayp : float
+        The ray parameter in s/km.
+
+    Returns
+    -------
+    None
     """
     tshift = 10.0
     dt = 0.05
@@ -357,12 +407,24 @@ def map_1rf(rfun, rayp):
     
 def compare_traces(*traces, labels=None):
     """
-    COMPARE_TRACES(TRACE1, TRACE2, TRACE3, ...)
-    Plot time series TRACE1, TRACE2, TRACE3, ... in the same graph
-    for comparison, where TRACE[N] is a row or column of numbers.  By
-    default, traces are plotted with vertical axis between -1 and 1.
-    To optimize vertical axis for individual traces, uncomment
-    command line "axis tight" in the code.
+    Plot multiple time series in the same graph for comparison.
+
+    By default, traces are plotted with a vertical axis between -1 and 1.
+    To optimize the vertical axis for the traces, uncomment the `autoscale` 
+    line in the code.
+
+    Parameters
+    ----------
+    *traces : array_like
+        Variable number of time series arrays to plot. Each trace should 
+        be a 1D array or coercible to one.
+    labels : list of str, optional
+        List of labels corresponding to each trace. If None or if fewer 
+        labels are provided than traces, default labels ('Trace N') are used.
+
+    Returns
+    -------
+    None
     """
     shift = 10.0
     dt = 0.05
