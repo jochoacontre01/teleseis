@@ -46,9 +46,7 @@ def nez_to_rtz(
         baz_arr = np.tile(baz_arr, ntr)
 
     for ii in range(ntr):
-        # ObsPy rotate_ne_rt returns R (baz) and T (baz+90).
-        # MATLAB expects R to be BAZ+180 positive, and T to be BAZ+270 positive.
-        # Therefore, we negate both R and T to match the original MATLAB output.
+        # Both Obspy and Matlab return the components with the same sign convention for RTZ rotation
         r, t = rotate_ne_rt(ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii])
         rcomp[ii] = r
         tcomp[ii] = t
@@ -117,13 +115,10 @@ def nez_to_lqt(
         inc_angle = np.degrees(np.arcsin(rayp_arr[ii] * vp_arr[ii]))
 
         # obspy rotate_zne_lqt returns L, Q, T.
-        # ObsPy's L points DOWN and towards the source. MATLAB's L is positive UPWARD.
-        # ObsPy's Q points UP and AWAY from the source. MATLAB's Q is BAZ+180 positive (AWAY).
-        # ObsPy's T points BAZ+90. MATLAB's T is BAZ+270.
         l, q, t = rotate_zne_lqt(zcomp_arr[ii], ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii], inc_angle)
 
         lcomp[ii] = l
-        qcomp[ii] = -q
+        qcomp[ii] = -q # Obspy's output has a contrary sign convention than the original Matlab code
         tcomp[ii] = t
 
     if lcomp.shape[0] == 1:
@@ -193,7 +188,7 @@ def nez_to_psvh(
         vs_arr = np.tile(vs_arr, ntr)
 
     for ii in range(ntr):
-        # 1. Rotate to Radial/Transverse (Mapped to MATLAB's BAZ conventions)
+        # 1. Rotate to Radial/Transverse
         r_obs, t_obs = rotate_ne_rt(ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii])
         r = r_obs
         t = t_obs
