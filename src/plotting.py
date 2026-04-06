@@ -1,9 +1,10 @@
 import numpy as np
+import numpy.typing as npt
 from scipy.signal import detrend
 from spectral import taper, bpfilt
 import matplotlib.pyplot as plt
 
-def powspec(seis, dt):
+def powspec(seis: npt.ArrayLike, dt: float) -> npt.NDArray:
     """
     Calculate and plot the power spectral density of seismogram(s).
 
@@ -76,8 +77,15 @@ def powspec(seis, dt):
     else:
         return spec
     
-def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None, 
-                  title_str="Seismogram Section", xlabel_str="Trace Number"):
+def plot_sectiond(
+    seis: npt.ArrayLike, 
+    aflag: float, 
+    delta: npt.ArrayLike | None = None, 
+    lf: float | None = None, 
+    hf: float | None = None, 
+    title_str: str = "Seismogram Section", 
+    xlabel_str: str = "Trace Number"
+) -> None:
     """
     Plot a seismogram section as a function of depth.
 
@@ -107,28 +115,28 @@ def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None,
     None
     """
     # Convert input to float numpy array to prevent integer division issues
-    seis = np.array(seis, dtype=float)
+    seis_arr = np.array(seis, dtype=float)
     
     # Hardwired variables (begin time and time step) 
     beg = -5.0
     dt = 0.1
 
     # Flip polarity
-    seis = -seis
+    seis_arr = -seis_arr
 
     # Measuring size of seis
-    ny, nt = seis.shape
+    ny, nt = seis_arr.shape
 
     # Default spacing between traces
-    if delta is None or len(delta) == 0:
+    if delta is None or len(delta) == 0:  # type: ignore
         dtest = 1
-        delta = np.arange(1, ny + 1)
+        delta_arr = np.arange(1, ny + 1)
     else:
         dtest = 0
-        delta = np.array(delta)
+        delta_arr = np.array(delta)
 
     # Setting scale for each trace
-    sdel = np.sort(delta)
+    sdel = np.sort(delta_arr)
     if len(sdel) > 1:
         ddelta = max((sdel[-1] - sdel[0]) / len(sdel), np.min(np.diff(sdel)) * 2)
     else:
@@ -138,61 +146,57 @@ def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None,
 
     # Precondition seis
     for iy in range(ny):
-        seis[iy, :] = seis[iy, :] - np.mean(seis[iy, :])
-        seis[iy, :] = detrend(seis[iy, :])
-        seis[iy, :] = taper(seis[iy, :], 0.2, dt, 0.6, nt * dt - 0.6)
+        seis_arr[iy, :] = seis_arr[iy, :] - np.mean(seis_arr[iy, :])
+        seis_arr[iy, :] = detrend(seis_arr[iy, :])
+        seis_arr[iy, :] = taper(seis_arr[iy, :], 0.2, dt, 0.6, nt * dt - 0.6)
 
     # Apply bandpass filter if frequencies are provided
     if lf is not None and hf is not None:
-        seis = bpfilt(seis, dt, lf, hf)
+        seis_arr = bpfilt(seis_arr, dt, lf, hf)
 
     # Precondition again after filtering
     for iy in range(ny):
-        seis[iy, :] = seis[iy, :] - np.mean(seis[iy, :])
-        seis[iy, :] = detrend(seis[iy, :])
-        seis[iy, :] = taper(seis[iy, :], 0.2, dt, 0.6, nt * dt - 0.6)
+        seis_arr[iy, :] = seis_arr[iy, :] - np.mean(seis_arr[iy, :])
+        seis_arr[iy, :] = detrend(seis_arr[iy, :])
+        seis_arr[iy, :] = taper(seis_arr[iy, :], 0.2, dt, 0.6, nt * dt - 0.6)
 
     # Initialize coordinate matrices
-    xymat = np.zeros_like(seis)
-    bxymat = np.zeros_like(seis)
-    rxymat = np.zeros_like(seis)
+    xymat = np.zeros_like(seis_arr)
+    bxymat = np.zeros_like(seis_arr)
+    rxymat = np.zeros_like(seis_arr)
 
     # Calculate coordinates for plotting and shading based on aflag
     if aflag < 0:
         for iy in range(ny):
-            normf = np.max(np.abs(seis[iy, :])) + 0.0000001
-            xymat[iy, :] = delta[iy] - ddelta * seis[iy, :] / normf
+            normf = np.max(np.abs(seis_arr[iy, :])) + 0.0000001
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / normf
             
-            val_b = seis[iy, :] - wb / ddelta * normf
-            bxymat[iy, :] = delta[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
+            val_b = seis_arr[iy, :] - wb / ddelta * normf
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
             
-            val_r = -seis[iy, :] - wb / ddelta * normf
-            rxymat[iy, :] = delta[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis[iy, :] + wb / ddelta * normf) / normf
+            val_r = -seis_arr[iy, :] - wb / ddelta * normf
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * normf) / normf
 
     elif aflag == 0:
-        normf = np.max(np.abs(seis)) + 0.0000001
+        normf = np.max(np.abs(seis_arr)) + 0.0000001
         for iy in range(ny):
-            xymat[iy, :] = delta[iy] - ddelta * seis[iy, :] / normf
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / normf
             
-            val_b = seis[iy, :] - wb / ddelta * normf
-            bxymat[iy, :] = delta[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
+            val_b = seis_arr[iy, :] - wb / ddelta * normf
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
             
-            val_r = -seis[iy, :] - wb / ddelta * normf
-            rxymat[iy, :] = delta[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis[iy, :] + wb / ddelta * normf) / normf
-            
-            # MATLAB debugging pause block (Commented out for smooth Python execution)
-            # print(np.column_stack((xymat[iy, :100], bxymat[iy, :100], rxymat[iy, :100])))
-            # input("Press Enter to continue...")
+            val_r = -seis_arr[iy, :] - wb / ddelta * normf
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * normf) / normf
 
     else:
         for iy in range(ny):
-            xymat[iy, :] = delta[iy] - ddelta * seis[iy, :] / aflag
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / aflag
             
-            val_b = seis[iy, :] - wb / ddelta * aflag
-            bxymat[iy, :] = delta[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / aflag
+            val_b = seis_arr[iy, :] - wb / ddelta * aflag
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / aflag
             
-            val_r = -seis[iy, :] - wb / ddelta * aflag
-            rxymat[iy, :] = delta[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis[iy, :] + wb / ddelta * aflag) / aflag
+            val_r = -seis_arr[iy, :] - wb / ddelta * aflag
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * aflag) / aflag
 
     # Plotting
     time = np.arange(nt) * dt + beg
@@ -225,7 +229,7 @@ def plot_sectiond(seis, aflag, delta=None, lf=None, hf=None,
 
     plt.show()
 
-def plot_traces(*traces, labels=None):
+def plot_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> None:
     """
     Plot multiple time series in separate subplots.
 
@@ -255,7 +259,7 @@ def plot_traces(*traces, labels=None):
         
     fig, axs = plt.subplots(ntr, 1, figsize=(10, 2.5 * ntr))
     if ntr == 1:
-        axs = [axs]
+        axs = [axs]  # type: ignore
         
     for ii, trace in enumerate(traces):
         trace_arr = np.asarray(trace).flatten()
@@ -275,7 +279,7 @@ def plot_traces(*traces, labels=None):
     plt.tight_layout()
     plt.show()
 
-def map_1rf(rfun, rayp):
+def map_1rf(rfun: npt.ArrayLike, rayp: float) -> None:
     """
     Map a single receiver function to depth by 1D migration.
 
@@ -356,18 +360,18 @@ def map_1rf(rfun, rayp):
     # Plot results
     dd = np.arange(-5, 100.1, 0.1)
     
-    def build_interp(depth_arr, main_rf, prf):
+    def build_interp(depth_arr: npt.NDArray, main_rf: npt.NDArray, prf: npt.NDArray) -> npt.NDArray:
         idx = np.where(depth_arr <= 110)[0]
         idxp = np.where(depth_arr <= 10)[0]
         num_p = len(idxp)
         
-        xp = np.concatenate([-np.flip(depth_arr[idxp]), [0], depth_arr[idx[:-1]]])
+        xp = np.concatenate([-np.flip(depth_arr[idxp]), [0.0], depth_arr[idx[:-1]]])
         yp_presig = prf[-num_p:] if num_p > 0 else []
         yp = np.concatenate([yp_presig, main_rf[idx]])
         
         # Sort arrays because np.interp requires strictly monotonically increasing x values
         sort_indices = np.argsort(xp)
-        return np.interp(dd, xp[sort_indices], yp[sort_indices])
+        return np.interp(dd, xp[sort_indices], yp[sort_indices]) # type: ignore
 
     rfun1 = build_interp(depth1, main_rfun, prfun)
     rfun2 = build_interp(depth2, main_rfun, prfun)
@@ -405,7 +409,7 @@ def map_1rf(rfun, rayp):
     plt.tight_layout()
     plt.show()
     
-def compare_traces(*traces, labels=None):
+def compare_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> None:
     """
     Plot multiple time series in the same graph for comparison.
 
@@ -439,7 +443,7 @@ def compare_traces(*traces, labels=None):
         lbl = labels[ii] if labels and ii < len(labels) else f'Trace {ii+1}'
         plt.plot(time_axis, trace, label=lbl)
         
-    plt.xlim([0 - shift, len(trace) * dt - shift])
+    plt.xlim([0 - shift, len(trace) * dt - shift])  # type: ignore
     plt.ylim([-1, 1])
     
     # To optimize the vertical axis for each trace, uncomment line below:
