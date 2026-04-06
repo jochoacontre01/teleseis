@@ -50,8 +50,8 @@ def nez_to_rtz(
         # MATLAB expects R to be BAZ+180 positive, and T to be BAZ+270 positive.
         # Therefore, we negate both R and T to match the original MATLAB output.
         r, t = rotate_ne_rt(ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii])
-        rcomp[ii] = -r
-        tcomp[ii] = -t
+        rcomp[ii] = r
+        tcomp[ii] = t
 
     if rcomp.shape[0] == 1:
         return rcomp[0], tcomp[0], zcomp_arr[0]
@@ -122,9 +122,9 @@ def nez_to_lqt(
         # ObsPy's T points BAZ+90. MATLAB's T is BAZ+270.
         l, q, t = rotate_zne_lqt(zcomp_arr[ii], ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii], inc_angle)
 
-        lcomp[ii] = -l
-        qcomp[ii] = q
-        tcomp[ii] = -t
+        lcomp[ii] = l
+        qcomp[ii] = -q
+        tcomp[ii] = t
 
     if lcomp.shape[0] == 1:
         return lcomp[0], qcomp[0], tcomp[0]
@@ -195,8 +195,8 @@ def nez_to_psvh(
     for ii in range(ntr):
         # 1. Rotate to Radial/Transverse (Mapped to MATLAB's BAZ conventions)
         r_obs, t_obs = rotate_ne_rt(ncomp_arr[ii], ecomp_arr[ii], baz_arr[ii])
-        r = -r_obs
-        t = -t_obs
+        r = r_obs
+        t = t_obs
 
         shcomp[ii] = 0.5 * t  # SH is identical to Transverse
 
