@@ -225,7 +225,7 @@ def plot_sectiond(
 
     # Reverse Y-Axis (Depth) and tighten boundaries
     ax.invert_yaxis()
-    ax.autoscale(enable=True, axis='both', tight=True)
+    # # ax.autoscale(enable=True, axis='both', tight=True)
 
     plt.show()
 
@@ -235,7 +235,7 @@ def plot_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> None
 
     By default, traces are plotted with a vertical axis between -1 and 1. 
     To optimize the vertical axis for individual traces, uncomment the 
-    `autoscale` line in the code.
+    # `autoscale` line in the code.
 
     Parameters
     ----------
@@ -267,10 +267,10 @@ def plot_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> None
         
         axs[ii].plot(time, trace_arr)
         axs[ii].set_xlim([0 - shift, len(trace_arr) * dt - shift])
-        axs[ii].set_ylim([-1, 1])
+        axs[ii].set_ylim([-np.max(np.r_[traces].flatten())*1.15, np.max(np.r_[traces].flatten())*1.15])
         
         # To optimize the vertical axis for each trace, uncomment line below:
-        # axs[ii].autoscale(enable=True, axis='both', tight=True)
+        # # axs[ii].autoscale(enable=True, axis='both', tight=True)
         
         lbl = labels[ii] if labels and ii < len(labels) else f'Trace {ii+1}'
         axs[ii].legend([lbl], loc='upper right')
@@ -380,7 +380,7 @@ def map_1rf(rfun: npt.ArrayLike, rayp: float) -> None:
     plt.figure(figsize=(10, 4))
     plt.plot(dd, rfun1, label='Ps')
     plt.legend(loc='upper right')
-    plt.autoscale(enable=True, axis='both', tight=True)
+    # plt.autoscale(enable=True, axis='both', tight=True)
     plt.title('Forward (standard) receiver function')
     plt.xlabel('Depth (km)')
     plt.show(block=False)
@@ -389,21 +389,21 @@ def map_1rf(rfun: npt.ArrayLike, rayp: float) -> None:
     
     axs[0].plot(dd, rfun1, label='Ps')
     axs[0].legend(loc='upper right')
-    axs[0].autoscale(enable=True, axis='both', tight=True)
+    # axs[0].autoscale(enable=True, axis='both', tight=True)
     axs[0].set_title('Forward and reflected (multiple-based) receiver functions')
     
     axs[1].plot(dd, rfun2, label='Pps')
     axs[1].legend(loc='upper right')
-    axs[1].autoscale(enable=True, axis='both', tight=True)
+    # axs[1].autoscale(enable=True, axis='both', tight=True)
     
     axs[2].plot(dd, -rfun3, label='Pss')
     axs[2].legend(loc='upper right')
-    axs[2].autoscale(enable=True, axis='both', tight=True)
+    # axs[2].autoscale(enable=True, axis='both', tight=True)
     
     # Stack forward and multiples
     axs[3].plot(dd, rfun1 + rfun2 - rfun3, label='Sum of modes')
     axs[3].legend(loc='upper right')
-    axs[3].autoscale(enable=True, axis='both', tight=True)
+    # axs[3].autoscale(enable=True, axis='both', tight=True)
     axs[3].set_xlabel('Depth (km)')
     
     plt.tight_layout()
@@ -414,7 +414,7 @@ def compare_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> N
     Plot multiple time series in the same graph for comparison.
 
     By default, traces are plotted with a vertical axis between -1 and 1.
-    To optimize the vertical axis for the traces, uncomment the `autoscale` 
+    # To optimize the vertical axis for the traces, uncomment the `autoscale` 
     line in the code.
 
     Parameters
@@ -444,10 +444,10 @@ def compare_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> N
         plt.plot(time_axis, trace, label=lbl)
         
     plt.xlim([0 - shift, len(trace) * dt - shift])  # type: ignore
-    plt.ylim([-1, 1])
+    plt.ylim([-np.max(np.r_[traces].flatten())*1.15, np.max(np.r_[traces].flatten())*1.15])
     
     # To optimize the vertical axis for each trace, uncomment line below:
-    plt.autoscale(enable=True, axis='y', tight=True)
+    # plt.autoscale(enable=True, axis='y', tight=True)
     
     plt.legend(loc='upper right')
     plt.xlabel('Time (s)')
