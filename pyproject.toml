@@ -3,12 +3,11 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["."]
 include = ["teleseis*"]
 
 [project]
 name = "teleseis"
-version = "0.1.0"
+version = "1.0.0"
 description = "Seismic processing for teleseismic earthquakes"
 requires-python = ">=3.13.11, <3.14"
 dependencies = [
