@@ -61,5 +61,5 @@ This package was developed as part of the EASC 6171 course at Memorial Universit
 
 ## Authors
 
-- **Original Matlab code**: Stéphane Rondenay (Proffesor), Department of Earth Science, University of Bergen
+- **Original Matlab code**: Stéphane Rondenay (Proffessor), Department of Earth Science, University of Bergen
 - **Python translation**: Jesus Ochoa-Contreras (MSc Geophysics student), Earth Sciences Department, Memorial University of Newfoundland
