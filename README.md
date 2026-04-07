@@ -1,4 +1,6 @@
-# Teleseis
+![](branding/logo/teleseis_logo.svg)
+
+---
 
 A Python package for processing teleseismic seismic data, providing tools for coordinate rotations, deconvolution, and visualization of seismic waveforms.
 
