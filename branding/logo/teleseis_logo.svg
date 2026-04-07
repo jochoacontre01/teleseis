@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200" width="100%" height="100%">
+  <!-- Dashed baseline representing the time axis -->
+  <line x1="30" y1="140" x2="470" y2="140" stroke="#737A87" stroke-width="2" stroke-dasharray="4 6" />
+  
+  <!-- Stylized Peak (representing a receiver function spike) -->
+  <path d="M 92 160 
+           L 110 30 
+           L 128 160 
+           L 120 160 
+           L 110 55 
+           L 100 160 
+           Z" 
+        fill="#00A896" />
+
+  <!-- Logo Text -->
+  <text x="145" y="128" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
+        font-size="76" 
+        font-weight="400" 
+        fill="#737A87" 
+        letter-spacing="-1">teleseis</text>
+</svg>
