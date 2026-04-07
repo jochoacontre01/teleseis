@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from scipy.signal import detrend
-from spectral import taper, bpfilt
+from teleseis.spectral import taper, bpfilt
 import matplotlib.pyplot as plt
 
 def powspec(seis: npt.ArrayLike, dt: float) -> npt.NDArray:
