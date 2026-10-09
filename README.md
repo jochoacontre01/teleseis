@@ -33,7 +33,10 @@ Provides spectral processing tools:
 Visualization utilities for seismic data:
 - `plot_traces()`: Plots multiple seismic traces with customizable labels
 - `compare_traces()`: Side-by-side comparison of seismic traces
-- `map_1rf()`: Maps receiver functions to depth
+- `plot_section()`: Plots a seismogram section as a function of time with wiggle and positive/negative fills
+- `plot_sectiond()`: Plots a seismogram section as a function of depth
+- `map_1rf()`: Maps a single receiver function to depth by 1D migration
+- `map_nrf()`: Maps a multi-trace receiver function section to depth by 1D migration
 - `powspec()`: Calculates and plots power spectral density
 
 ## Installation
