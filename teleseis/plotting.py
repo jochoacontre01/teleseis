@@ -453,3 +453,255 @@ def compare_traces(*traces: npt.ArrayLike, labels: list[str] | None = None) -> N
     plt.xlabel('Time (s)')
     plt.tight_layout()
     plt.show()
+
+def plot_section(
+    seis: npt.ArrayLike, 
+    aflag: float, 
+    delta: npt.ArrayLike | None = None, 
+    lf: float | None = None, 
+    hf: float | None = None, 
+    title_str: str = "Seismogram Section", 
+    xlabel_str: str = "Trace Number"
+) -> None:
+    """
+    Plot a seismogram section as a function of time.
+
+    Parameters
+    ----------
+    seis : array_like
+        2D array of seismograms where traces form the rows.
+    aflag : float
+        Determines amplitude scaling. 
+        - If < 0: Trace is scaled to its maximum amplitude.
+        - If == 0: Trace is scaled to the maximum amplitude of the entire section.
+        - If > 0: Trace is scaled to the `aflag` value.
+    delta : array_like, optional
+        Position of geophones/traces. Default is None (1 to number of traces).
+    lf : float, optional
+        Low cutoff frequency for bandpass filtering. Default is None.
+    hf : float, optional
+        High cutoff frequency for bandpass filtering. Default is None.
+    title_str : str, optional
+        The title of the plot. Default is "Seismogram Section".
+    xlabel_str : str, optional
+        The label for the x-axis. Default is "Trace Number".
+
+    Returns
+    -------
+    None
+    """
+    seis_arr = np.array(seis, dtype=float)
+
+    # Hardwired variables (begin time and time step)
+    beg = -10.0
+    dt = 0.05
+
+    # Flip polarity
+    seis_arr = -seis_arr
+
+    ny, nt = seis_arr.shape
+
+    if delta is None or len(delta) == 0:  # type: ignore
+        dtest = 1
+        delta_arr = np.arange(1, ny + 1, dtype=float)
+    else:
+        dtest = 0
+        delta_arr = np.array(delta, dtype=float).flatten()
+
+    sdel = np.sort(delta_arr)
+    if len(sdel) > 1:
+        ddelta = max((sdel[-1] - sdel[0]) / len(sdel), np.min(np.diff(sdel)) * 2)
+    else:
+        ddelta = 1.0
+
+    wb = ddelta / 20.0
+
+    # Precondition seis
+    for iy in range(ny):
+        seis_arr[iy, :] = seis_arr[iy, :] - np.mean(seis_arr[iy, :])
+        seis_arr[iy, :] = detrend(seis_arr[iy, :])
+        seis_arr[iy, :] = taper(seis_arr[iy, :], 0.5, dt, 0.6, nt * dt - 0.6)
+
+    if lf is not None and hf is not None:
+        seis_arr = bpfilt(seis_arr, dt, lf, hf)
+
+    for iy in range(ny):
+        seis_arr[iy, :] = seis_arr[iy, :] - np.mean(seis_arr[iy, :])
+        seis_arr[iy, :] = detrend(seis_arr[iy, :])
+        seis_arr[iy, :] = taper(seis_arr[iy, :], 0.5, dt, 0.6, nt * dt - 0.6)
+
+    xymat = np.zeros_like(seis_arr)
+    bxymat = np.zeros_like(seis_arr)
+    rxymat = np.zeros_like(seis_arr)
+
+    if aflag < 0:
+        for iy in range(ny):
+            normf = np.max(np.abs(seis_arr[iy, :])) + 1e-7
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / normf
+            val_b = seis_arr[iy, :] - wb / ddelta * normf
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
+            val_r = -seis_arr[iy, :] - wb / ddelta * normf
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * normf) / normf
+    elif aflag == 0:
+        normf = np.max(np.abs(seis_arr)) + 1e-7
+        for iy in range(ny):
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / normf
+            val_b = seis_arr[iy, :] - wb / ddelta * normf
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / normf
+            val_r = -seis_arr[iy, :] - wb / ddelta * normf
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * normf) / normf
+    else:
+        for iy in range(ny):
+            xymat[iy, :] = delta_arr[iy] - ddelta * seis_arr[iy, :] / aflag
+            val_b = seis_arr[iy, :] - wb / ddelta * aflag
+            bxymat[iy, :] = delta_arr[iy] - wb - ddelta * ((np.sign(val_b) + 1) / 2) * val_b / aflag
+            val_r = -seis_arr[iy, :] - wb / ddelta * aflag
+            rxymat[iy, :] = delta_arr[iy] + wb - ddelta * ((np.sign(val_r) + 1) / 2) * (seis_arr[iy, :] + wb / ddelta * aflag) / aflag
+
+    time = np.arange(nt) * dt + beg
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    for iy in range(ny):
+        ax.plot(xymat[iy, :], time, 'k-')
+        ax.fill(bxymat[iy, :], time, 'b', edgecolor='white', linewidth=0.5)
+        ax.fill(rxymat[iy, :], time, 'r', edgecolor='white', linewidth=0.5)
+
+    for iy in range(ny):
+        ax.plot(xymat[iy, :], time, 'k-', linewidth=1)
+
+    ax.set_ylabel('Time [seconds]')
+    ax.set_title(title_str, fontsize=14)
+    if dtest == 1:
+        ax.set_xlabel('Trace number')
+    else:
+        ax.set_xlabel(xlabel_str)
+
+    ax.invert_yaxis()
+    plt.show()
+
+def map_nrf(
+    rfun: npt.ArrayLike, 
+    rayp: npt.ArrayLike, 
+    baz: npt.ArrayLike | None = None
+) -> npt.NDArray:
+    """
+    Map a section of receiver functions to depth by 1D migration.
+
+    Parameters
+    ----------
+    rfun : array_like
+        2D array of receiver functions where individual RFs form rows.
+    rayp : array_like
+        Ray parameter(s) in s/km. Must match the number of traces in `rfun`.
+    baz : array_like, optional
+        Backazimuth (or distance array) corresponding to each trace.
+
+    Returns
+    -------
+    rfun1 : ndarray
+        Migrated Ps receiver function matrix mapped to depth `dd = np.arange(-5, 100.1, 0.1)`.
+    """
+    tshift = 10.0
+    dt = 0.05
+
+    rfun_arr = np.atleast_2d(rfun)
+    rayp_arr = np.asarray(rayp).flatten()
+    nrf = rfun_arr.shape[0]
+
+    split_idx = int(np.fix(tshift / dt)) - 1
+    prfun = rfun_arr[:, :split_idx]
+    main_rfun = rfun_arr[:, split_idx:]
+
+    vmod = np.array([
+        [ 0,         2,         3,           1.5,         2.28 ],
+        [ 2,        37,         6,           3.4,         2.6  ],
+        [37,      1000,         8.1,         4.5,         3.5  ]
+    ])
+
+    d1 = vmod[:, 0]
+    d2 = vmod[:, 1] + 0.001
+    vp = vmod[:, 2]
+    vs = vmod[:, 3]
+
+    n_layers = len(d2)
+    tcut1 = np.zeros((nrf, n_layers + 1))
+    tcut2 = np.zeros((nrf, n_layers + 1))
+    tcut3 = np.zeros((nrf, n_layers + 1))
+
+    for irf in range(nrf):
+        p = rayp_arr[irf]
+        for ii in range(1, n_layers + 1):
+            idx = ii - 1
+            dz = d2[idx] - d1[idx]
+            term_s = np.sqrt(1.0 / vs[idx]**2 - p**2)
+            term_p = np.sqrt(1.0 / vp[idx]**2 - p**2)
+            tcut1[irf, ii] = (term_s - term_p) * dz + tcut1[irf, ii - 1]
+            tcut2[irf, ii] = (term_s + term_p) * dz + tcut2[irf, ii - 1]
+            tcut3[irf, ii] = (2.0 * term_s) * dz + tcut3[irf, ii - 1]
+
+    dd = np.arange(-5, 100.1, 0.1)
+    n_main = main_rfun.shape[1]
+    depth1 = np.zeros((nrf, n_main))
+    depth2 = np.zeros((nrf, n_main))
+    depth3 = np.zeros((nrf, n_main))
+    rfun1 = np.zeros((nrf, len(dd)))
+    rfun2 = np.zeros((nrf, len(dd)))
+    rfun3 = np.zeros((nrf, len(dd)))
+
+    def build_interp(depth_arr: npt.NDArray, main_rf: npt.NDArray, prf: npt.NDArray) -> npt.NDArray:
+        idx = np.where(depth_arr <= 110)[0]
+        idxp = np.where(depth_arr <= 10)[0]
+        num_p = len(idxp)
+        xp = np.concatenate([-np.flip(depth_arr[idxp]), [0.0], depth_arr[idx[:-1]]])
+        yp_presig = prf[-num_p:] if num_p > 0 else []
+        yp = np.concatenate([yp_presig, main_rf[idx]])
+        sort_indices = np.argsort(xp)
+        return np.interp(dd, xp[sort_indices], yp[sort_indices])
+
+    for irf in range(nrf):
+        p = rayp_arr[irf]
+        for it in range(n_main):
+            rftime = (it + 1) * dt
+            tt1 = np.where(tcut1[irf, :] < rftime)[0]
+            tt2 = np.where(tcut2[irf, :] < rftime)[0]
+            tt3 = np.where(tcut3[irf, :] < rftime)[0]
+
+            m1 = tt1[-1] if len(tt1) > 0 else 0
+            m2 = tt2[-1] if len(tt2) > 0 else 0
+            m3 = tt3[-1] if len(tt3) > 0 else 0
+
+            depth1[irf, it] = d1[m1] + (rftime - tcut1[irf, m1]) / (np.sqrt(1.0 / vs[m1]**2 - p**2) - np.sqrt(1.0 / vp[m1]**2 - p**2))
+            depth2[irf, it] = d1[m2] + (rftime - tcut2[irf, m2]) / (np.sqrt(1.0 / vs[m2]**2 - p**2) + np.sqrt(1.0 / vp[m2]**2 - p**2))
+            depth3[irf, it] = d1[m3] + (rftime - tcut3[irf, m3]) / (2.0 * np.sqrt(1.0 / vs[m3]**2 - p**2))
+
+        rfun1[irf, :] = build_interp(depth1[irf, :], main_rfun[irf, :], prfun[irf, :])
+        rfun2[irf, :] = build_interp(depth2[irf, :], main_rfun[irf, :], prfun[irf, :])
+        rfun3[irf, :] = build_interp(depth3[irf, :], main_rfun[irf, :], prfun[irf, :])
+
+    fig, axs = plt.subplots(4, 1, figsize=(10, 10))
+    axs[0].plot(dd, np.sum(rfun1, axis=0), label='Stacked Ps')
+    axs[0].legend(loc='upper right')
+    axs[0].set_title('Multiple recordings: forward and reflected (multiple-based) receiver functions')
+
+    axs[1].plot(dd, np.sum(rfun2, axis=0), label='Stacked Pps')
+    axs[1].legend(loc='upper right')
+
+    axs[2].plot(dd, -np.sum(rfun3, axis=0), label='Stacked Pss')
+    axs[2].legend(loc='upper right')
+
+    axs[3].plot(dd, np.sum(rfun1 + rfun2 - rfun3, axis=0), label='Sum of modes')
+    axs[3].legend(loc='upper right')
+    axs[3].set_xlabel('Depth (km)')
+    plt.tight_layout()
+    plt.show()
+
+    if baz is not None:
+        baz_arr = np.asarray(baz).flatten()
+        has_multiple_rayp = np.sum(rayp_arr - rayp_arr[0]) != 0
+        if has_multiple_rayp:
+            plot_sectiond(rfun1, -1.0, rayp_arr, 0.03, 0.5, title_str="Section vs Ray Parameter", xlabel_str="Ray Parameter (s/km)")
+            plot_sectiond(rfun1, -1.0, baz_arr, 0.03, 0.5, title_str="Section vs Backazimuth", xlabel_str="Backazimuth (deg)")
+        else:
+            plot_sectiond(rfun1, -1.0, baz_arr, 0.03, 0.5, title_str="Section vs Distance", xlabel_str="Distance")
+
+    return rfun1
